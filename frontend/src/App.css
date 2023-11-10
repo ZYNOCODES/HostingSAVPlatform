@@ -1584,6 +1584,12 @@ form {
 .table-nouveau-ne-ligne-orange-row{
   background-color: rgba(255, 123, 0, 0.426);
 }
+.table-nouveau-ne-ligne-yellow-row{
+  background-color: rgba(255, 251, 0, 0.426)
+}
+.table-nouveau-ne-ligne-white-row{
+  background-color: #fff;
+}
 .table-patients td {
   border: none;
 }

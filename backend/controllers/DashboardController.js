@@ -23,7 +23,27 @@ const GetAll = async (req, res) => {
         res.status(500).send('Error getting dashboard');
     }
 }   
+const GetAllSuspended = async (req, res) => {
+    try {
+        const dashboards = await Dashboard.findAll({
+            where: {
+                ProduitSuspendu: {
+                    [Op.gt]: 0 
+                }
+            }
+        });
 
+        if (dashboards.length > 0) {
+            const suspendedSum = dashboards.reduce((sum, dashboard) => sum + dashboard.ProduitSuspendu, 0);
+            res.status(200).json({ SuspendedSum: suspendedSum });
+        } else {
+            res.json({ message: 'No dashboards found with ProduitSuspendu > 0' });
+        }
+    } catch (error) {
+        console.error(error);
+        res.status(500).send('Error getting dashboard');
+    }
+}
 //get a specific user
 const GetAllByCentre = async (req, res) => {
     const { centre } = req.params;
@@ -242,5 +262,6 @@ module.exports = {
     GetAllByCentre,
     GetByWeek,
     GetByMonth,
-    GetByYear
+    GetByYear,
+    GetAllSuspended
 }

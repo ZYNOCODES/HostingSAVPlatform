@@ -1,0 +1,138 @@
+.forminput-Action-corrective{
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+}
+
+.forminput-Action-corrective input,.forminput-Action-corrective-input{
+    padding: 10px 50px;
+    margin-top: 5px;
+    border-radius: 10px;
+    border: 2px solid rgb(0, 0, 0);
+    text-align: center;
+    width: 100%;
+    font-size: 1em;
+}
+.forminput-Action-corrective input:enabled,.forminput-Action-corrective-input:enabled{
+    border: 2px solid #c4c2c2;
+    transition: 0.5s;
+}
+
+.forminput-Action-corrective input:hover,.forminput-Action-corrective-input:hover{
+    border: 2px solid #000;
+    transition: 0.5s;
+}
+label{
+    margin-top: 20px;
+    margin-left: 10px;
+    text-align: left;
+}
+.form-Action-corrective-group{
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-start;
+    width: 100%;
+}
+.forminput-Action-corrective{
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+}
+
+.forminput-Action-corrective input,.forminput-Action-corrective-input{
+    padding: 10px 50px;
+    margin-top: 5px;
+    border-top-right-radius: 10px;
+    border-top-left-radius: 10px;
+    border-bottom-left-radius: 0px;
+    border-bottom-right-radius: 0px;
+    border: 2px solid rgb(0, 0, 0);
+    text-align: center;
+    width: 100%;
+    font-size: 1em;
+}
+
+.forminput-Action-corrective input:enabled,.forminput-Action-corrective-input:enabled{
+    border: 2px solid #c4c2c2;
+    transition: 0.5s;
+}
+
+.forminput-Action-corrective input:hover,.forminput-Action-corrective-input:hover{
+    border: 2px solid #000;
+    transition: 0.5s;
+}
+.Select-Action-corrective-containeer{
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: flex-start;
+    min-height: 96px;
+    height: auto;
+    width: 100%;
+    background-color: #dadada;
+    border-bottom-left-radius: 10px;
+    border-bottom-right-radius: 10px;
+}
+.Select-Action-corrective{
+    flex: 1;
+    text-align: center;
+    font-size: 1em;
+    cursor: pointer;
+    padding: 10px 50px;
+    border-radius: 0px;
+    width: 100%;
+}
+.Select-Action-corrective-row{
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    height: auto;
+    border-radius: 0px;
+    border: 2px solid #c4c2c2;
+    background-color: #dadada;
+    padding-inline-end: 10px;
+}
+.Updatebutton{
+    display: flex;
+    justify-content: center;
+    width: 100%;
+    margin-top: 10px;
+}
+@media only screen and (max-width:1024px){
+    .forminput-Action-corrective input,.forminput-Action-corrective-input{
+        padding: 7px 10px;
+        margin-top: 5px;
+        margin-bottom: 10px;
+        text-align: left;
+        width: 40vh;
+        font-size: 0.8em;
+        display: flex;
+        flex-direction: column;
+    }
+    label{
+        margin-bottom: 7px;
+        margin-left: 7px;
+        font-size: 0.8em;
+    }
+    .forminput-Action-corrective input,.forminput-Action-corrective-input{
+        padding: 7px 10px;
+        text-align: start;
+        width: 40vh;
+        font-size: 0.8em;
+        display: flex;
+        flex-direction: column;
+    }
+    .Select-Action-corrective{
+        padding: 7px 10px;
+        text-align: start;
+        font-size: 0.8em;
+    }
+    .Select-Action-corrective-containeer{
+        min-height: 96px;
+        height: auto;
+        width: 40vh;
+    }
+}

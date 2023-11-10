@@ -4,6 +4,7 @@ const { v4: uuidv4 } = require('uuid');
 const path = require('path');
 const { PDFDocument } = require('pdf-lib');
 const fs = require('fs');
+const validator = require('validator');
 
 const PDFGenerator = async (req, res) => {
     const { BonDepot } = req.params;
@@ -18,9 +19,19 @@ const PDFGenerator = async (req, res) => {
         DateDepot, 
         type, 
         postalCode,
+        NbrSerie,
+        ActinoCorrective,
         UserID } = req.body;
     const pdfTemplate = require(`../documents/${BonDepot}`);
     try {
+        if(NbrSerie !== undefined) 
+        if ((type === 'BL' && ActinoCorrective === false) || validator.isEmpty(NbrSerie)) {
+            if (type === 'BL') {
+                return res.status(400).send({ message: "Veuillez remplir les champs obligatoires (Actino Corrective, NbrSerie)" });
+            } else if (type === 'BD') {
+                return res.status(400).send({ message: "N° de serie est obligatoire" });
+            }
+        }
         const browser = await puppeteer.launch();
         const page = await browser.newPage();
 
@@ -28,7 +39,7 @@ const PDFGenerator = async (req, res) => {
         await page.setViewport({ width: 595, height: 842 }); // A4 dimensions in pixels
         // generate unique ID for pdf document
         const BonID = generateUniqueID(type, Wilaya, postalCode)
-
+        const NbrSeries= NbrSerie ? NbrSerie : '  ';
         const content = pdfTemplate({Nom,
             Prenom,
             Email,
@@ -38,7 +49,8 @@ const PDFGenerator = async (req, res) => {
             Wilaya,
             CentreDepot,
             DateDepot,
-            BonID});
+            BonID,
+            NbrSerie: NbrSeries,});
 
         // Set the HTML content of the page
         await page.setContent(content);
@@ -57,7 +69,7 @@ const PDFGenerator = async (req, res) => {
 
         await browser.close();
 
-        res.status(200).send(uniqueFilename);
+        res.status(200).json({uniqueFilename});
     } catch (err) {
         console.log(err);
         res.status(500).send("Error generating PDF");
@@ -72,7 +84,8 @@ const PDFSender = async (req, res) => {
         }
 
         const filePath = path.join(__dirname, '..', 'files', filename);
-        res.sendFile(filePath);
+
+        res.status(200).sendFile(filePath);
     } catch (err) {
         console.log(err);
         res.status(500).send("Error sending PDF");

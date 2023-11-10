@@ -76,7 +76,7 @@ const CreateNewUser = () => {
   async function submitSignup(e) {
     handleClose();
     e.preventDefault();
-    const reponse = await fetch("http://localhost:8000/User/signup", {
+    const reponse = await fetch(process.env.REACT_APP_URL_BASE+"/User/signup", {
       method: "POST",
       headers: {
         "content-type": "application/json",

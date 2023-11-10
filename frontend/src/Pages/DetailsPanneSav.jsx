@@ -23,10 +23,15 @@ import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
 import DialogContentText from '@mui/material/DialogContentText';
 import DialogTitle from '@mui/material/DialogTitle';
+import TextField from '@mui/material/TextField';
 import Button from '@mui/material/Button';
 import moment from 'moment-timezone';
 import { Fa1 } from "react-icons/fa6";
 import { CircularProgress } from '@mui/material';
+import TypePanneSelect from "../Components/Form/TypePanneSelect";
+import Updatebutton from '../Components/Buttons/updatebutton'
+import { isEmpty  } from "validator";
+import ActionCorrectiveSelect from "../Components/Form/ActionCorrective";
 
 const DetailsPanneSav = () => {
   const notifyFailed = (message) => toast.error(message);
@@ -50,13 +55,30 @@ const DetailsPanneSav = () => {
   const [horsGarantieChecked, setHorsGarantieChecked] = useState(false);
   const [sousReserveChecked, setSousReserveChecked] = useState(false);
   const [openDialog, setOpenDialog] = useState(false);
+  const [openDialog3, setOpenDialog3] = useState(false);
+  const [openDialog4, setOpenDialog4] = useState(false);
+  const [openDialog5, setOpenDialog5] = useState(false);
+  const [openDialog6, setOpenDialog6] = useState(false);
   const [openDialogPDF, setOpenDialogPDF] = useState(false);
   const [selectedCheckboxLabel, setSelectedCheckboxLabel] = useState('');
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false); // State for CircularProgress
   const [lableACT, setlableACT] = useState('');
   const [CodePostal, setCodePostal] = useState('0');
-  const [PanneDataUpdated, setPanneDataUpdated] = useState('');
+  const [TypePanne ,setTypePanne] = useState([]);
+  const [NbrSerie, setNbrSerie] = useState('');
+  const [Description, setDescription] = useState('');
+  const [ifTypePanneUpdated, setIfTypePanneUpdated] = useState(false);
+  const [ifNbrSerieUpdated, setIfNbrSerieUpdated] = useState(false);
+  const [ifDescriptionUpdated, setIfDescriptionUpdated] = useState(false);
+  const [CauseDescription, setCauseDescription] = useState('');
+  const [suspended, setsuspended] = useState(false);
+  const [IfActionCorrectiveIsUpdated, setIfActionCorrectiveIsUpdated] = useState(false);
+  const [ifDescriptionACUpdated, setIfDescriptionACUpdated] = useState(false);
+  const [ActionCorrective, setActionCorrective] = useState([]);
+  const [DescriptionAC, setDescriptionAC] = useState('');
+
+  const BL = 'BL';
   //Upload image to server
   const uploadImage = async (e) => {
     e.preventDefault();
@@ -67,7 +89,7 @@ const DetailsPanneSav = () => {
     formData.append("userID", user?.id);
 
     const result = await axios.post(
-      "http://localhost:8000/Pannes/IMG",
+      process.env.REACT_APP_URL_BASE+"/Pannes/IMG",
       formData,
       {
         headers: { 
@@ -83,40 +105,38 @@ const DetailsPanneSav = () => {
     }
   };
   //Get panne data from server
-  useEffect(() => {
-    const fetchPanneData = async () => {
-      try {
-        const response = await fetch(
-          `http://localhost:8000/Pannes/${id}`,
-          {
-            method: "GET",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${user?.token}`,
-            },
-          }
-        );
-
-        if (response.ok) {
-          const data = await response.json();
-          setPanneData(data);
-        } else {
-          console.error("Error receiving Panne data:", response.statusText);
+  const fetchPanneData = async () => {
+    try {
+      const response = await fetch(
+        process.env.REACT_APP_URL_BASE+`/Pannes/${id}`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${user?.token}`,
+          },
         }
-      } catch (error) {
-        console.error("Error fetching Panne data:", error);
-      }
-    };
+      );
 
+      if (response.ok) {
+        const data = await response.json();
+        setPanneData(data);
+      } else {
+        console.error("Error receiving Panne data:", response.statusText);
+      }
+    } catch (error) {
+      console.error("Error fetching Panne data:", error);
+    }
+  };
+  useEffect(() => {
     fetchPanneData();
-    setPanneDataUpdated('');
-  }, [id, user?.token, PanneDataUpdated]);
+  },[user?.token]);
   //Get all pannes data of a product from server
   useEffect(() => {
     const fetchAllPannesDataOfProduct = async () => {
       try {
         const response = await fetch(
-          `http://localhost:8000/Pannes/All/${PanneData?.ReferanceProduit}/${id}`,
+          process.env.REACT_APP_URL_BASE+`/Pannes/All/${PanneData?.ReferanceProduit}/${id}`,
           {
             method: "GET",
             headers: {
@@ -142,7 +162,7 @@ const DetailsPanneSav = () => {
   useEffect(() => {
     const fetchCodePostalData = async () => {
       try {
-        const response = await fetch(`http://localhost:8000/Willaya/${PanneData?.Wilaya}`, {
+        const response = await fetch(process.env.REACT_APP_URL_BASE+`/Willaya/${PanneData?.Wilaya}`, {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
@@ -165,11 +185,11 @@ const DetailsPanneSav = () => {
   }, [CodePostal, PanneData?.Wilaya, user?.token]);
   //create pdf file and download it
   const createAndDownloadPdf = async () => {
-    setLoading(true); // show CircularProgress
     try {
-      if(ToggleValue === 3 || ToggleValue === 4 || ToggleValue === 5){
+      if(ToggleValue === 5){
         if(PanneData?.BLPDFfile === null || PanneData?.BLPDFfile === undefined){
-            const response = await fetch('http://localhost:8000/EmailGenerator/createPDF/BonV2', {
+            setLoading(true); // show CircularProgress
+            const response = await fetch(process.env.REACT_APP_URL_BASE+'/EmailGenerator/createPDF/BonV2', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -183,28 +203,31 @@ const DetailsPanneSav = () => {
                     TypePanne: PanneData.TypePanne,
                     Wilaya: PanneData.Wilaya,
                     CentreDepot: PanneData.CentreDepot,
+                    NbrSerie: PanneData.NbrSerie,
+                    ActinoCorrective: (PanneData.ActionCorrective || PanneData.DescriptionAC) ? true : false,
                     DateDepot: new Date().toISOString().slice(0, 10),
-                    type: 'BL',  
+                    type: BL,  
                     postalCode: CodePostal
                 })
                 });
-        
+                const data = await response.json();
                 if (!response.ok) {
-                    throw new Error('Network response was not ok');
+                  setOpenDialogPDF(false);
+                  setLoading(false); // Hide CircularProgress
+                  notifyFailed(data.message);
                 }
         
                 if(response.ok){
-                    const uniqueFilename = await response.text();
-        
-                    const pdfResponse = await fetch(`http://localhost:8000/EmailGenerator/fetchPDF?filename=${uniqueFilename}`, {
+                    const uniqueFilename = data.uniqueFilename;
+                    const pdfResponse = await fetch(process.env.REACT_APP_URL_BASE+`/EmailGenerator/fetchPDF?filename=${uniqueFilename}`, {
                         method: 'GET',
                         headers: {
                             'Content-Type': 'application/pdf'
                         },
                     });
-            
                     if (!pdfResponse.ok) {
-                        throw new Error('Network response was not ok');
+                      setOpenDialogPDF(false);
+                      setLoading(false); // Hide CircularProgress
                     }
             
                     if(pdfResponse.ok){
@@ -213,27 +236,25 @@ const DetailsPanneSav = () => {
                         link.href = URL.createObjectURL(pdfBlob);
                         link.download = uniqueFilename;
                         link.click();
-                        if (ToggleValue === 3) {
-                          UpdatePanne(ToggleValue, "Panne En reparation au centre a été vérifiée avec succès.",uniqueFilename);
-                        } else if (ToggleValue === 4) {
-                          UpdatePanne(ToggleValue, "Panne en attente de pickup a été vérifiée avec succès.",uniqueFilename);
-                        } else if (ToggleValue === 5) {
+                        if (ToggleValue === 5) {
                           UpdatePanne(ToggleValue, "Panne livrée a été vérifiée avec succès.",uniqueFilename);
                         }
                     }
                 }
         }else{
-          if (ToggleValue === 4) {
-            UpdatePanne(ToggleValue, "Panne en attente de pickup a été vérifiée avec succès.");
-          } else if (ToggleValue === 5) {
-            UpdatePanne(ToggleValue, "Panne livrée a été vérifiée avec succès.");
-          }
+          UpdatePanne(ToggleValue, "Panne livrée a été vérifiée avec succès.");
         }
-      }else if(ToggleValue === 1 || ToggleValue === 2){
+      }else {
         if (ToggleValue === 1) {
           UpdatePanne(ToggleValue, "Panne en attente de depot a été vérifiée avec succès.");
         } else if (ToggleValue === 2) {
           UpdatePanne(ToggleValue, "Panne en attente de réparation a été vérifiée avec succès.");
+        }else if (ToggleValue === 4) {
+          UpdatePanne(ToggleValue, "Panne en attente de pickup a été vérifiée avec succès.");
+        } else if (ToggleValue === 3) {
+          UpdatePanne(ToggleValue, "Panne reparée a été vérifiée avec succès.");
+        }else if (ToggleValue === 5) {
+          UpdatePanne(ToggleValue, "Panne livrée a été vérifiée avec succès.");
         }
       }
     } catch (error) {
@@ -242,7 +263,7 @@ const DetailsPanneSav = () => {
   }
   //update pannes progress state
   const UpdatePanne = async (val, Act,uniqueFilename) => {
-    const reponse = await fetch(`http://localhost:8000/Pannes/${id}`, {
+    const reponse = await fetch(process.env.REACT_APP_URL_BASE+`/Pannes/${id}`, {
       method: "PATCH",
       headers: {
         "content-type": "application/json",
@@ -262,7 +283,7 @@ const DetailsPanneSav = () => {
     if (reponse.ok) {
       setLoading(false); // Hide CircularProgress
       setOpenDialogPDF(false);
-      setPanneDataUpdated('Panne updated');
+      fetchPanneData();      
       if (val === 1) {
         notifySuccess(Act);
       } else if (val === 2) {
@@ -277,7 +298,7 @@ const DetailsPanneSav = () => {
     }
   };
   const UpdatePanneGarantie = async (val) => {
-    const reponse = await fetch(`http://localhost:8000/Pannes/Garantie/${id}`, {
+    const reponse = await fetch(process.env.REACT_APP_URL_BASE+`/Pannes/Garantie/${id}`, {
       method: "PATCH",
       headers: {
         "content-type": "application/json",
@@ -378,7 +399,7 @@ const DetailsPanneSav = () => {
   //download pdf directly 
   const downloadPDFFile = async (filename) => {
     try {
-      const response = await fetch(`http://localhost:8000/EmailGenerator/downloaderPDF/${filename}`,{
+      const response = await fetch(process.env.REACT_APP_URL_BASE+`/EmailGenerator/downloaderPDF/${filename}`,{
         method: 'GET',
         headers: {
           Authorization: `Bearer ${user?.token}`,
@@ -423,10 +444,11 @@ const DetailsPanneSav = () => {
   // handle close button click of the dialog
   const handleCloseDialog = () => {
     setOpenDialog(false);
-  };
-  // handle open button click of the dialog
-  const handleCloseDialogPDF = () => {
+    setOpenDialog3(false);
     setOpenDialogPDF(false);
+    setOpenDialog4(false);
+    setOpenDialog5(false);
+    setOpenDialog6(false);
   };
   // handle the "Confirmer" button click of the dialog
   const handleChange = () => {
@@ -454,81 +476,318 @@ const DetailsPanneSav = () => {
       UpdatePanneGarantie('Sous Reserve');
     }
   };
+  // handle type panne input change
+  const handleTypePanneInput = (newValue)=>{
+    setTypePanne(newValue);
+  }
+  // handle Action corrective input change
+  const handleActionCorrectiveInput = (newValue)=>{
+    setActionCorrective(newValue);
+  }
+  // handle numero de serie change
+  const handleNbrSerieInputChange = (newValue)=>{
+    setNbrSerie(newValue);
+  }
+  // handle update (NbrSerie, Description, TypePanne)
+  const handleUpdate = async (val)=>{
+    const reponse = await fetch(process.env.REACT_APP_URL_BASE+`/Pannes/Version2/${id}`, {
+      method: "PATCH",
+      headers: {
+        "content-type": "application/json",
+        Authorization: `Bearer ${user?.token}`,
+      },
+      body: JSON.stringify({
+        TypePanne: TypePanne.join('-'),
+        NbrSerie: NbrSerie,
+        Description: Description,
+        action: val,
+      }),
+    });
+
+    const json = await reponse.json();
+
+    if (!reponse.ok) {
+      setOpenDialog3(false);
+      notifyFailed(json.message);
+    }
+    if (reponse.ok) {
+      setOpenDialog3(false);
+      fetchPanneData();
+      notifySuccess(`${val}`);
+      setIfTypePanneUpdated(false);
+      setIfNbrSerieUpdated(false);
+      setIfDescriptionUpdated(false);
+      setDescription('');
+      setNbrSerie('');
+      fetchPanneData();
+    }
+  }
+  // handle update ActionCorrective
+  const handleUpdateActionCorrective = async (val)=>{
+    const reponse = await fetch(process.env.REACT_APP_URL_BASE+`/Pannes/ActionCorrective/${id}`, {
+      method: "PATCH",
+      headers: {
+        "content-type": "application/json",
+        Authorization: `Bearer ${user?.token}`,
+      },
+      body: JSON.stringify({
+        ActionCorrective: ActionCorrective.join('-'),
+        DescriptionAC: DescriptionAC,
+        action: val,
+      }),
+    });
+
+    const json = await reponse.json();
+
+    if (!reponse.ok) {
+      notifyFailed(json.message);
+    }
+    if (reponse.ok) {
+      setOpenDialog6(false);
+      fetchPanneData();
+      notifySuccess(`${val}`);
+      setDescriptionAC('');
+      fetchPanneData();
+    }
+  }
+  // handle NbrSerie, Description, TypePanne change
+  useEffect(() => {
+    if(PanneData?.TypePanne.trim().toLowerCase() !== TypePanne.join('-').trim().toLowerCase()){
+      setIfTypePanneUpdated(true);
+    }else{
+      setIfTypePanneUpdated(false);
+    }
+    if(!isEmpty(NbrSerie) && PanneData?.NbrSerie !== NbrSerie){
+      setIfNbrSerieUpdated(true);
+    }else{
+      setIfNbrSerieUpdated(false);
+    }
+    if(!isEmpty(Description) && PanneData?.Description !== Description){
+      setIfDescriptionUpdated(true);
+    }else{
+      setIfDescriptionUpdated(false);
+    }
+    if(ActionCorrective.length > 0 && PanneData?.ActionCorrective?.trim().toLowerCase() !== ActionCorrective.join('-').trim().toLowerCase()){
+      setIfActionCorrectiveIsUpdated(true);
+    }else{
+      setIfActionCorrectiveIsUpdated(false);
+    }
+    if(!isEmpty(DescriptionAC) && PanneData?.DescriptionAC !== DescriptionAC){
+      setIfDescriptionACUpdated(true);
+    }else{
+      setIfDescriptionACUpdated(false);
+      setDescriptionAC('');
+    }
+  },[ActionCorrective, Description, DescriptionAC, NbrSerie, PanneData?.ActionCorrective, PanneData?.Description, PanneData?.DescriptionAC, PanneData?.NbrSerie, PanneData?.TypePanne, TypePanne]);
+  // handle actions (update NbrSerie, Description, TypePanne)
+  const handleActions = () => {
+    if (ifTypePanneUpdated) {
+      if (ifNbrSerieUpdated && ifDescriptionUpdated) {
+          handleUpdate(`Mettre à jour le Type de panne avec ${TypePanne.join('-')} et le N° de serie avec ${NbrSerie} et la description avec ${Description} pour la panne ID= ${id}`);
+        } else if (ifNbrSerieUpdated) {
+          handleUpdate(`Mettre à jour le Type de panne avec ${TypePanne.join('-')} et le N° de serie avec ${NbrSerie} pour la panne ID= ${id}`);
+        } else if (ifDescriptionUpdated) {
+          handleUpdate(`Mettre à jour le Type de panne avec ${TypePanne.join('-')} et la description avec ${Description} pour la panne ID= ${id}`);
+        } else {
+          handleUpdate(`Mettre à jour le Type de panne avec ${TypePanne.join('-')} pour la panne ID= ${id}`);
+        }
+    } else {
+        if (ifNbrSerieUpdated  && ifDescriptionUpdated) {
+            handleUpdate(`Mettre à jour le N° de serie avec ${NbrSerie} et la description avec ${Description} pour la panne ID= ${id}`);
+          } else if (ifNbrSerieUpdated ) {
+            handleUpdate(`Mettre à jour le N° de serie avec ${NbrSerie} pour la panne ID= ${id}`);
+          } else if (ifDescriptionUpdated) {
+            handleUpdate(`Mettre à jour la description avec ${Description} pour la panne ID= ${id}`);
+          }else{
+            notifyFailed('Aucune modification n\'a été effectuée');
+            setOpenDialog3(false);
+          }
+    }
+  }
+  // handle actions ActionsCorrectives
+  const handleActionsForActionCorrective = () => {
+    if (IfActionCorrectiveIsUpdated === true && ifDescriptionACUpdated === true) {
+      handleUpdateActionCorrective(`Mettre à jour l'Action Corrective avec ${ActionCorrective.join('-')} et la description avec ${DescriptionAC} pour la panne ID= ${id}`);
+    } else {
+      if(IfActionCorrectiveIsUpdated === true){
+        handleUpdateActionCorrective(`Mettre à jour l'Action Corrective avec ${ActionCorrective.join('-')} pour la panne ID= ${id}`);
+      }else if(ifDescriptionACUpdated === true) {
+        handleUpdateActionCorrective(`Mettre à jour la description avec ${DescriptionAC} pour la panne ID= ${id}`);
+      }else{
+        notifyFailed('Aucune modification n\'a été effectuée');
+        setDescriptionAC('');
+      }
+    }
+  }
+  const handleOpenDialog3 = () => {
+    setOpenDialog3(true);
+  }
+  // handle suspend button click
+  const handleSuspendBTN = async () => {
+    if(isEmpty(CauseDescription)){
+      notifyFailed('Veuillez entrer une description');
+    }else{
+      handleUpdateSuspendedStatus(`La panne est suspendue avec succès PanneID= ${id}`,CauseDescription);
+    }
+  }
+  // handle unsuspend button click
+  const handleUnSuspendBTN = async () => {
+    handleUpdateSuspendedStatus(`L'annulation de la suspension de la panne a été effectuée avec succès PanneID= ${id}`,null);
+    setCauseDescription('');
+  }
+  // handle update status of the panne to suspended
+  const handleUpdateSuspendedStatus = async (val,CauseDescription)=>{
+    const reponse = await fetch(process.env.REACT_APP_URL_BASE+`/Pannes/SuspendedStatus/${id}`, {
+      method: "PATCH",
+      headers: {
+        "content-type": "application/json",
+        Authorization: `Bearer ${user?.token}`,
+      },
+      body: JSON.stringify({
+        Etat: CauseDescription,
+        action: val,
+      }),
+    });
+
+    const json = await reponse.json();
+
+    if (!reponse.ok) {
+      setOpenDialog4(false);
+      setOpenDialog5(false);
+      notifyFailed(json.message);
+    }
+    if (reponse.ok) {
+      setOpenDialog4(false);
+      setOpenDialog5(false);
+      fetchPanneData();
+      notifySuccess(`${val}`);
+    }
+  }
+  useEffect(() => {
+    (PanneData?.Etat === null || PanneData?.Etat === '') ? setsuspended(false) : setsuspended(true);
+  },[PanneData?.Etat, suspended]);
+  
   return (
     <>
       <MyNavBar act={act} setAct={setAct} />
       <div className="pannedetails-container">
-        <div className="pannedetails-title">
-          <div className="back-button" onClick={GoBackPressed}>
-            <IoIosArrowBack className="icon" size={33} fill="#fff" />
+       
+        <div className="pannedetails-title-container">
+          <div className="pannedetails-title">
+            <div className="back-button" onClick={GoBackPressed}>
+              <IoIosArrowBack className="icon" size={33} fill="#fff" />
+            </div>
+            <h3>Details de panne :</h3>
           </div>
-          <h3>Details de panne :</h3>
+          {suspended === false ?
+            <div className="Suspendbutton" onClick={setOpenDialog4}>
+              <h3>suspendre</h3>
+            </div>
+            :
+            ''
+          }
         </div>
+
+        {suspended ?
+
+          <>
+            <div className="pannedetails-suspended-container">
+              <div className="back-button susp" onClick={GoBackPressed}>
+                <IoIosArrowBack className="icon" size={33} fill="#fff" />
+              </div>
+              <div className="raison">
+                <h3>Raison de suspension: </h3>
+                <h3>{PanneData?.Etat}</h3>
+              </div>
+              <div className="Suspendbutton" onClick={setOpenDialog5}>
+                <h3>Annuler la suspension</h3>
+              </div>
+
+              
+            </div>
+            
+          </>
+          : 
+          ''
+        }
+
+        
         <div className="pannedetails-info form-section">
-          <form>
-            <FormInput
-              label="Nom :"
-              value={PanneData?.Nom}
-              readOnly
-              type="text"
-            />
-            <FormInput
-              label="Prenom :"
-              value={PanneData?.Prenom}
-              readOnly
-              type="text"
-            />
-            <FormInput
-              label="Email"
-              value={PanneData?.Email}
-              readOnly
-              type="text"
-            />
-            <FormInput
-              label="Num Tel:"
-              value={PanneData?.Telephone}
-              readOnly
-              type="text"
-            />
-            <FormInput
-              label="Wilaya:"
-              value={PanneData?.Wilaya}
-              readOnly
-              type="text"
-            />
-          </form>
-          <form>
-            <FormInput
-              label="Referance de produit :"
-              value={PanneData?.ReferanceProduit}
-              readOnly
-              type="text"
-            />
-            <FormInput
-              label="Type de panne :"
-              value={PanneData?.TypePanne}
-              readOnly
-              type="text"
-            />
-            <FormInput
-              label="Centre de depot:"
-              value={"SAV de " + PanneData?.CentreDepot}
-              readOnly
-              type="text"
-            />
-            <FormInput
-              label="Date de depot:"
-              value={formatDate(PanneData?.DateDepot)}
-              readOnly
-              type="text"
-            />
-            <FormInput
-              label="Description:"
-              value={PanneData?.Description}
-              readOnly
-              type="text"
-            />
-          </form>
+                <form>
+                  <FormInput
+                    label="Nom :"
+                    value={PanneData?.Nom}
+                    readOnly
+                    type="text"
+                  />
+                  <FormInput
+                    label="Prenom :"
+                    value={PanneData?.Prenom}
+                    readOnly
+                    type="text"
+                  />
+                  <FormInput
+                    label="Email"
+                    value={PanneData?.Email}
+                    readOnly
+                    type="text"
+                  />
+                  <FormInput
+                    label="Num Tel:"
+                    value={PanneData?.Telephone}
+                    readOnly
+                    type="text"
+                  />
+                  <FormInput
+                    label="Wilaya:"
+                    value={PanneData?.Wilaya}
+                    readOnly
+                    type="text"
+                  />
+                  <FormInput
+                    label="Centre de depot:"
+                    value={"SAV de " + PanneData?.CentreDepot}
+                    readOnly
+                    type="text"
+                  />
+                  <FormInput
+                    label="Date de depot:"
+                    value={formatDate(PanneData?.DateDepot)}
+                    readOnly
+                    type="text"
+                  />
+                </form>
+                <form>
+                  
+                  <FormInput
+                    label="Reference de produit :"
+                    value={PanneData?.ReferanceProduit}
+                    readOnly
+                    type="text"
+                  />
+                  <FormInput 
+                    label='N° de serie :' 
+                    placeholder= 'Entrer le numero de serie de ce produit' 
+                    type='text' 
+                    defaultValue = {PanneData?.NbrSerie}
+                    onChange={handleNbrSerieInputChange}
+                    />
+
+                  <div className='forminput'>
+                    <label>Description :</label>
+                    <textarea 
+                      className="DescriptionInput" 
+                      rows="5"
+                      onChange={(e) => setDescription(e.target.value)}
+                      defaultValue={PanneData?.Description}
+                      placeholder= 'Entrer une description' >
+                    </textarea>
+                  </div>
+                  <TypePanneSelect label='Type de panne :' placeholder=' Entrer la referance de votre produit' type='text' value={PanneData?.TypePanne} onChange={handleTypePanneInput} /> 
+                  <div className="Updatebutton" onClick={handleOpenDialog3}>
+                    <h3>Modifier</h3>
+                  </div>
+                </form>
         </div>
         <div className="pannedetails-title progress">
           <h3>Statue Garantie :</h3>
@@ -606,6 +865,9 @@ const DetailsPanneSav = () => {
               onChange={handleProgressChange}
               disabled={disabledButtons[1]}
             />
+            <div className="Action-correctives-btn" onClick={setOpenDialog6}>
+              <h3>Actions Correctives</h3>
+            </div>
             <Tooglebtn
               label="Produit réparé"
               value={3}
@@ -733,7 +995,7 @@ const DetailsPanneSav = () => {
                 </DialogContentText>
             </DialogContent>
             <DialogActions>
-                <Button onClick={handleCloseDialogPDF} disabled={loading}>Annuler</Button>
+                <Button onClick={handleCloseDialog} disabled={loading}>Annuler</Button>
                 <Button onClick={createAndDownloadPdf} autoFocus disabled={loading}>
                     Confirmer
                 </Button>
@@ -749,6 +1011,130 @@ const DetailsPanneSav = () => {
               <CircularProgress className="CircularProgress" />
             </div>
             )}
+        </Dialog>
+        {/* Dialog mise a jour de (NbrSerie, Description, TypePanne) */}
+        <Dialog
+          open={openDialog3}
+          onClose={false}
+          aria-labelledby="alert-dialog-title"
+          aria-describedby="alert-dialog-description"
+        >
+          <DialogTitle id="alert-dialog-title">{`Confirmation de mise a jour`}</DialogTitle>
+          <DialogContent>
+            <DialogContentText id="alert-dialog-description">
+              Confirmer le mise à jour de la panne avec les informations suivantes : 
+            </DialogContentText>
+            <DialogContentText>
+              {!isEmpty(NbrSerie) ? `N° de serie : ${NbrSerie}` : ''}
+            </DialogContentText>
+            <DialogContentText>
+              {PanneData?.TypePanne.trim().toLowerCase() !== TypePanne.join('-').trim().toLowerCase()
+               ? `Type de panne : ${TypePanne.join('-')}` : ''}
+            </DialogContentText>
+            <DialogContentText>
+              {!isEmpty(Description) ? `Description : ${Description}` : ''}
+            </DialogContentText>
+            <DialogContentText>
+              {(isEmpty(Description) && isEmpty(NbrSerie) && PanneData?.TypePanne.trim().toLowerCase() === TypePanne.join('-').trim().toLowerCase())
+               ? `Aucune modification n'a été effectuée` : ''}
+            </DialogContentText>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={handleCloseDialog}>Annuler</Button>
+            <Button onClick={handleActions} autoFocus>
+              Confirmer
+            </Button>
+          </DialogActions>
+        </Dialog>
+        {/* Dialog de suspension */}
+        <Dialog
+          open={openDialog4}
+          onClose={false}
+          aria-labelledby="alert-dialog-title"
+          aria-describedby="alert-dialog-description"
+        >
+          <DialogTitle id="alert-dialog-title">{`Confirmer la suspendre de la panne avec la cause suivante`}</DialogTitle>
+          <DialogContent>
+            <DialogContentText id="alert-dialog-description">
+              Cause :
+            </DialogContentText>
+            <TextField
+            autoFocus
+            margin="dense"
+            id="name"
+            type="text"
+            fullWidth
+            height="100px"
+            variant="standard"
+            onChange={(e) => setCauseDescription(e.target.value)}
+          />
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={handleCloseDialog}>Annuler</Button>
+            <Button onClick={handleSuspendBTN} autoFocus>
+              Confirmer
+            </Button>
+          </DialogActions>
+        </Dialog>
+        {/* Dialog annulation de suspension */}
+        <Dialog
+          open={openDialog5}
+          onClose={false}
+          aria-labelledby="alert-dialog-title"
+          aria-describedby="alert-dialog-description"
+        >
+          <DialogTitle id="alert-dialog-title">{`Confirmer l'annuler de la suspension`}</DialogTitle>
+          <DialogContent>
+            <DialogContentText>
+              motif de la suspension précédente :
+            </DialogContentText>
+            <DialogContentText id="alert-dialog-description">
+              {PanneData?.Etat}
+            </DialogContentText>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={handleCloseDialog}>Annuler</Button>
+            <Button onClick={handleUnSuspendBTN} autoFocus>
+              Confirmer
+            </Button>
+          </DialogActions>
+        </Dialog>
+        {/* Dialog action corrective */}
+        <Dialog
+          open={openDialog6}
+          onClose={false}
+          aria-labelledby="alert-dialog-title"
+          aria-describedby="alert-dialog-description"
+          width="100%"
+        >
+          <DialogTitle id="alert-dialog-title">{`Ajouter les Actions correctives :`}</DialogTitle>
+        
+          <DialogContent>
+            <DialogContentText id="alert-dialog-description">
+              Remplire les champs suivants :
+            </DialogContentText>
+            <TextField
+            autoFocus
+            margin="dense"
+            id="name"
+            type="text"
+            placeholder="Description"
+            fullWidth
+            helperText="Entrer une description"
+            variant="standard"
+            defaultValue={PanneData?.DescriptionAC}
+            onChange={(e) => setDescriptionAC(e.target.value)}
+            />
+            <DialogContentText id="alert-dialog-description">
+              <ActionCorrectiveSelect label='Actions Correctives :' placeholder= 'Entrer l`action corrective pour cette panne' value={PanneData?.ActionCorrective} type='text' onChange={handleActionCorrectiveInput} /> 
+            </DialogContentText>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={handleCloseDialog}>Annuler</Button>
+            <Button onClick={handleActionsForActionCorrective} autoFocus>
+              Confirmer
+            </Button>
+          </DialogActions>
         </Dialog>
         <ToastContainer />
       </div>

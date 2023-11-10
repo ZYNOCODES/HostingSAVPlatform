@@ -91,7 +91,7 @@ const OuvrirUnTicket = () => {
                 handleCreateNewPanneWithPDF();
                 handleClose();
             }else{
-                const response = await fetch('http://localhost:8000/EmailGenerator/createPDF/BonV3', {
+                const response = await fetch(process.env.REACT_APP_URL_BASE+'/EmailGenerator/createPDF/BonV1', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -106,19 +106,21 @@ const OuvrirUnTicket = () => {
                     Wilaya,
                     CentreDepot,
                     DateDepot,
-                    type: 'BD',  
+                    type: 'TBD',  
                     postalCode: PostalCode
                 })
                 });
-        
+                const data = await response.json();
                 if (!response.ok) {
-                    throw new Error('Network response was not ok');
+                    setLoading(false); // Hide CircularProgress
+                    handleClose();
+                    notifyFailed(data.message);
                 }
         
                 if(response.ok){
-                    const uniqueFilename = await response.text();
+                    const uniqueFilename = data.uniqueFilename;
         
-                    const pdfResponse = await fetch(`http://localhost:8000/EmailGenerator/fetchPDF?filename=${uniqueFilename}`, {
+                    const pdfResponse = await fetch(process.env.REACT_APP_URL_BASE+`/EmailGenerator/fetchPDF?filename=${uniqueFilename}`, {
                         method: 'GET',
                         headers: {
                             'Content-Type': 'application/pdf'
@@ -127,7 +129,9 @@ const OuvrirUnTicket = () => {
                     });
             
                     if (!pdfResponse.ok) {
-                        throw new Error('Network response was not ok');
+                        setLoading(false); // Hide CircularProgress
+                        handleClose();
+                        notifyFailed(data.message);
                     }
             
                     if(pdfResponse.ok){
@@ -145,7 +149,7 @@ const OuvrirUnTicket = () => {
         }
     }
     async function handleCreateNewPanneWithPDF(PDFFilename) {
-        const reponse = await fetch("http://localhost:8000/Pannes", {
+        const reponse = await fetch(process.env.REACT_APP_URL_BASE+"/Pannes", {
             method: "POST",
             headers: {
               "content-type": "application/json",
@@ -171,7 +175,7 @@ const OuvrirUnTicket = () => {
     async function handleCreateNewPanneNoPDF(e) {
         handleClose();
         e.preventDefault();
-        const reponse = await fetch("http://localhost:8000/Pannes", {
+        const reponse = await fetch(process.env.REACT_APP_URL_BASE+"/Pannes", {
             method: "POST",
             headers: {
               "content-type": "application/json",

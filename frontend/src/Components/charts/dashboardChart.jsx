@@ -57,7 +57,7 @@ export default function MyChart() {
   useEffect(() => {
     const fetchDashboardDataWeekly = async () => {
       try {
-        const response = await fetch(`http://localhost:8000/Dashboard/current/week`, {
+        const response = await fetch(process.env.REACT_APP_URL_BASE+`/Dashboard/current/week`, {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
@@ -80,7 +80,7 @@ export default function MyChart() {
   useEffect(() => {
     const fetchDashboardDataMonthly = async () => {
       try {
-        const response = await fetch(`http://localhost:8000/Dashboard/current/month`, {
+        const response = await fetch(process.env.REACT_APP_URL_BASE+`/Dashboard/current/month`, {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
@@ -103,7 +103,7 @@ export default function MyChart() {
   useEffect(() => {
     const fetchDashboardDataYearly = async () => {
       try {
-        const response = await fetch(`http://localhost:8000/Dashboard/current/year`, {
+        const response = await fetch(process.env.REACT_APP_URL_BASE+`/Dashboard/current/year`, {
           method: "GET",
           headers: {
             "Content-Type": "application/json",

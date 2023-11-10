@@ -96,7 +96,6 @@ const GetAllDelivred = async (req, res) => {
   }
 }
 const GetByID = async (req, res) => {
-  // Handle request to get all Pannes whred by ID
   const { id } = req.params;
   try {
     const Pannes = await Panne.findByPk(id);
@@ -112,7 +111,6 @@ const GetByID = async (req, res) => {
   
 }
 const GetByUserID = async (req, res) => {
-  // Handle request to get all Pannes whred by ID
   const { id } = req.params;
   try {
     const Pannes = await Panne.findAll({
@@ -131,7 +129,6 @@ const GetByUserID = async (req, res) => {
   }
 }
 const GetByRefProduct = async (req, res) => {
-  // Handle request to get all Pannes filtered by ReferanceProduit
   const { Ref, id } = req.params;
 
   try {
@@ -163,6 +160,25 @@ const GetByRefProduct = async (req, res) => {
     res.status(500).json({ message: 'Internal server error' });
   }
 }
+const GetByBon = async (req, res) => {
+  const { BonRef } = req.params;
+
+  try {
+    const currentPanne = await Panne.findOne({
+      where: {
+        BDPDFfile: BonRef + '.pdf',
+      },
+    });
+
+    if (!currentPanne) {
+      return res.status(400).json({ message: 'Numero de bon incorrect' });
+    }
+    res.status(200).json({ Panne: currentPanne });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+}
 const Create = async (req, res) => {
   // Handle request to create a new Panne
   const { Nom, Prenom, Email, Telephone, 
@@ -182,85 +198,169 @@ try {
     if(!validator.isEmail(Email)){
         return res.status(400).json({message: "L'email n'est pas valide"});
     }
-    const newPanne = await Panne.create({ Nom, Prenom, Email, Telephone, 
-      ReferanceProduit, TypePanne, Wilaya,
-      CentreDepot, DateDepot, [PDFFilename.startsWith('BD') ? 'BDPDFfile' : 'BLPDFfile']: PDFFilename }).then(async () => {
-        const dashboard = await Dashboard.findOne({
-          where: {
-            createdAt : new Date().toISOString().slice(0, 10),
-          }
-        });
-        const statistics = await StatisticsCentre.findOne({
-          where: {
-            Centre: CentreDepot,
-            createdAt : new Date().toISOString().slice(0, 10),
-          }
-        });
-        // check if dashboard and statistics exist for today
-        if (!dashboard && !statistics) {
-          // create dashboard
-          const newDashboard = await Dashboard.create({
-            ProduitEnAttente: 1,
-            NbTicketsOuverts: 1,
+    if(PDFFilename){
+      const newPanne = await Panne.create({ Nom, Prenom, Email, Telephone, 
+        ReferanceProduit, TypePanne, Wilaya,
+        CentreDepot, DateDepot,
+        [PDFFilename.startsWith('BD') ? 'BDPDFfile' : PDFFilename.startsWith('BL') ? 'BLPDFfile' : '']: PDFFilename
+      }).then(async (Panne) => {
+          const dashboard = await Dashboard.findOne({
+            where: {
+              createdAt : new Date().toISOString().slice(0, 10),
+            }
           });
-          await newDashboard.save().then(async () => {
+          const statistics = await StatisticsCentre.findOne({
+            where: {
+              Centre: CentreDepot,
+              createdAt : new Date().toISOString().slice(0, 10),
+            }
+          });
+          // check if dashboard and statistics exist for today
+          if (!dashboard && !statistics) {
+            // create dashboard
+            const newDashboard = await Dashboard.create({
+              ProduitEnAttente: 1,
+              NbTicketsOuverts: 1,
+            });
+            await newDashboard.save().then(async () => {
+              // create statistics
+              const newStatistics = await StatisticsCentre.create({
+                Centre: CentreDepot,
+                ProduitEnAttente: 1,
+                NbTicketsOuverts: 1,
+              });
+              await newStatistics.save();
+              return res.status(200).json({message: 'Panne created successfully', Panne: Panne});
+            }).catch((err) => {
+              console.log("Error while creating dashboard", err);
+            });
+          }
+          if(dashboard && !statistics){
             // create statistics
             const newStatistics = await StatisticsCentre.create({
               Centre: CentreDepot,
               ProduitEnAttente: 1,
               NbTicketsOuverts: 1,
             });
-            await newStatistics.save();
-            return res.status(200).json({message: 'Panne created successfully'});
-          }).catch((err) => {
-            console.log("Error while creating dashboard", err);
-          });
-        }
-        if(dashboard && !statistics){
-          // create statistics
-          const newStatistics = await StatisticsCentre.create({
-            Centre: CentreDepot,
-            ProduitEnAttente: 1,
-            NbTicketsOuverts: 1,
-          });
-          await newStatistics.save().then(async () => {
+            await newStatistics.save().then(async () => {
+              // update dashboard
+              dashboard.ProduitEnAttente += 1;
+              dashboard.NbTicketsOuverts += 1;          
+              await dashboard.save();
+              console.log("Dashboard updated successfully");
+              return res.status(200).json({message: 'Panne created successfully', Panne: Panne});         
+            }).catch((err) => {
+              console.log("Error while creating statistics", err);
+            });
+          }
+          if(dashboard && statistics){
             // update dashboard
-            dashboard.ProduitEnAttente += 1;
-            dashboard.NbTicketsOuverts += 1;          
-            await dashboard.save();
-            console.log("Dashboard updated successfully");
-            return res.status(200).json({message: 'Panne created successfully'});         
-          }).catch((err) => {
-            console.log("Error while creating statistics", err);
-          });
-        }
-        if(dashboard && statistics){
-          // update dashboard
-          dashboard.ProduitEnAttente += 1;  
-          dashboard.NbTicketsOuverts += 1;        
-          await dashboard.save().then(async () => {
-            // update statistics where centre = CentreDepot
-            await StatisticsCentre.update(
-              {
-                ProduitEnAttente:  statistics.ProduitEnAttente + 1,
-                NbTicketsOuverts: statistics.NbTicketsOuverts + 1,
-              },
-              {
-                where: {
-                  Centre: CentreDepot,
+            dashboard.ProduitEnAttente += 1;  
+            dashboard.NbTicketsOuverts += 1;        
+            await dashboard.save().then(async () => {
+              // update statistics where centre = CentreDepot
+              await StatisticsCentre.update(
+                {
+                  ProduitEnAttente:  statistics.ProduitEnAttente + 1,
+                  NbTicketsOuverts: statistics.NbTicketsOuverts + 1,
                 },
-              }
-            );
-            console.log("Dashboard updated successfully");
-            // response
-            return res.status(200).json({message: 'Panne created successfully'});
-          }).catch((err) => {
-            console.log("Error while updating dashboard", err);
-          });            
-        }
-      }).catch((err) => {
-          console.log("Error while creating panne", err);
-      });
+                {
+                  where: {
+                    Centre: CentreDepot,
+                  },
+                }
+              );
+              console.log("Dashboard updated successfully");
+              // response
+              return res.status(200).json({message: 'Panne created successfully', Panne: Panne});
+            }).catch((err) => {
+              console.log("Error while updating dashboard", err);
+            });            
+          }
+        }).catch((err) => {
+            console.log("Error while creating panne", err);
+        });
+    }else{
+      const newPanne = await Panne.create({ Nom, Prenom, Email, Telephone, 
+        ReferanceProduit, TypePanne, Wilaya,
+        CentreDepot, DateDepot }).then(async (Panne) => {
+          const dashboard = await Dashboard.findOne({
+            where: {
+              createdAt : new Date().toISOString().slice(0, 10),
+            }
+          });
+          const statistics = await StatisticsCentre.findOne({
+            where: {
+              Centre: CentreDepot,
+              createdAt : new Date().toISOString().slice(0, 10),
+            }
+          });
+          // check if dashboard and statistics exist for today
+          if (!dashboard && !statistics) {
+            // create dashboard
+            const newDashboard = await Dashboard.create({
+              ProduitEnAttente: 1,
+              NbTicketsOuverts: 1,
+            });
+            await newDashboard.save().then(async () => {
+              // create statistics
+              const newStatistics = await StatisticsCentre.create({
+                Centre: CentreDepot,
+                ProduitEnAttente: 1,
+                NbTicketsOuverts: 1,
+              });
+              await newStatistics.save();
+              return res.status(200).json({message: 'Panne created successfully', Panne: Panne});
+            }).catch((err) => {
+              console.log("Error while creating dashboard", err);
+            });
+          }
+          if(dashboard && !statistics){
+            // create statistics
+            const newStatistics = await StatisticsCentre.create({
+              Centre: CentreDepot,
+              ProduitEnAttente: 1,
+              NbTicketsOuverts: 1,
+            });
+            await newStatistics.save().then(async () => {
+              // update dashboard
+              dashboard.ProduitEnAttente += 1;
+              dashboard.NbTicketsOuverts += 1;          
+              await dashboard.save();
+              console.log("Dashboard updated successfully");
+              return res.status(200).json({message: 'Panne created successfully'});         
+            }).catch((err) => {
+              console.log("Error while creating statistics", err);
+            });
+          }
+          if(dashboard && statistics){
+            // update dashboard
+            dashboard.ProduitEnAttente += 1;  
+            dashboard.NbTicketsOuverts += 1;        
+            await dashboard.save().then(async () => {
+              // update statistics where centre = CentreDepot
+              await StatisticsCentre.update(
+                {
+                  ProduitEnAttente:  statistics.ProduitEnAttente + 1,
+                  NbTicketsOuverts: statistics.NbTicketsOuverts + 1,
+                },
+                {
+                  where: {
+                    Centre: CentreDepot,
+                  },
+                }
+              );
+              console.log("Dashboard updated successfully");
+              // response
+              return res.status(200).json({message: 'Panne created successfully'});
+            }).catch((err) => {
+              console.log("Error while updating dashboard", err);
+            });            
+          }
+        }).catch((err) => {
+            console.log("Error while creating panne", err);
+        });
+    }
 } catch (error) {
     console.error(error);
     res.status(500).send('Error creating panne');
@@ -269,7 +369,7 @@ try {
 const Update = async (req, res) => {
   // Handle request to update a Panne
   const { id } = req.params;
-  const { progres, action, userID, PDFFilename } = req.body;
+  const { progres, action, userID, PDFFilename, NbrSerie } = req.body;
   try {
     //get user by id
     const panne = await Panne.findByPk(id);
@@ -281,6 +381,8 @@ const Update = async (req, res) => {
     // assign panne new values
     panne.Progres = progres;
     panne.UserID = userID;
+    panne.NbrSerie = NbrSerie; 
+  
     if(PDFFilename && PDFFilename.startsWith('BD')){
       panne.BDPDFfile = PDFFilename;
     }else if(PDFFilename && PDFFilename.startsWith('BL')){
@@ -337,6 +439,146 @@ const UpdateGarantie = async (req, res) => {
     }).catch((error) => console.log(error));;
     res.status(200).json({message: 'success'});
   } catch (error) {
+    console.error(error);
+    res.status(500).send('Error updating panne');
+  }
+}
+const UpdateNbrserie = async (req, res) => {
+  // Handle request to update a Panne
+  const { id } = req.params;
+  const { TypePanne, NbrSerie, Description, action } = req.body;
+  try {
+    if(!TypePanne && validator.isEmpty(NbrSerie) && validator.isEmpty(Description)) {
+      res.status(400).json({message: 'Un des champs doivent être remplis'});
+    }else{
+      //get user by id
+      const panne = await Panne.findByPk(id);
+      //check if panne exist
+      if (!panne) {
+          return res.status(404).json({ error: 'panne not found' });
+      }
+      // assign panne new values
+      if(TypePanne) panne.TypePanne = TypePanne;
+      if(NbrSerie) panne.NbrSerie = NbrSerie;
+      if(Description) panne.Description = Description;
+      // save panne
+      await panne.save().then(async () => {
+        await Transaction.create({
+          UserID : panne.UserID , Action : action
+        }).then(async () => {
+          console.log("Transaction created successfully");
+        }).catch((error) => console.log(error));
+      }).catch((error) => console.log(error));
+      // return updated panne
+      res.status(200).json({panne: panne});
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).send('Error updating panne');
+  }
+}
+const UpdateSuspendedStatus = async (req, res) => {
+  const {id} = req.params;
+  const {Etat, action} = req.body;
+  try{
+    //get user by id
+    const panne = await Panne.findByPk(id);
+    //check if panne exist
+    if (!panne) {
+        return res.status(404).json({ error: 'panne not found' });
+    }
+    // assign panne new values
+    panne.Etat = Etat;
+    // current date and time
+    panne.DateDepot = new Date().toISOString();
+    // save panne
+    await panne.save().then(async () => {
+      const Date = panne.DateDepot;
+      const centre = panne.CentreDepot;
+      if(Etat !== null && !validator.isEmpty(Etat)){
+        // update dashboard
+        const dashboard = await Dashboard.findOne({
+          where: { createdAt: Date },
+        });
+
+        const sourceStatistics = await StatisticsCentre.findOne({
+          where: { Centre: centre, createdAt: Date },
+        });
+
+        if (dashboard) {
+          await Dashboard.update(
+            { ProduitSuspendu: dashboard.ProduitSuspendu + 1 },
+            { where: { createdAt: Date } }
+          );
+        }
+
+        if (sourceStatistics) {
+          await StatisticsCentre.update(
+            { ProduitSuspendu: sourceStatistics.ProduitSuspendu + 1 },
+            { where: { Centre: centre, createdAt: Date } }
+          );
+        }
+      }else if(Etat === null){
+        // update dashboard
+        const dashboard = await Dashboard.findOne({
+          where: { createdAt: Date },
+        });
+
+        const sourceStatistics = await StatisticsCentre.findOne({
+          where: { Centre: centre, createdAt: Date },
+        });
+
+        if (dashboard) {
+          await Dashboard.update(
+            { ProduitSuspendu: dashboard.ProduitSuspendu - 1 },
+            { where: { createdAt: Date } }
+          );
+        }
+
+        if (sourceStatistics) {
+          await StatisticsCentre.update(
+            { ProduitSuspendu: sourceStatistics.ProduitSuspendu - 1 },
+            { where: { Centre: centre, createdAt: Date } }
+          );
+        }
+      }
+      await Transaction.create({
+        UserID : panne.UserID , Action : action
+      }).catch((error) => console.log(error));
+    }).catch((error) => console.log(error));
+    // return updated panne
+    res.status(200).json({panne: panne});
+  }catch (error) {
+    console.error(error);
+    res.status(500).send('Error updating panne');
+  }
+}
+const UpdateActionCorrective = async (req, res) => {
+  const {id} = req.params;
+  const {ActionCorrective, DescriptionAC, action} = req.body;
+  try{
+    if(!validator.isEmail(ActionCorrective) || !validator.isEmpty(DescriptionAC)){
+      //get user by id
+      const panne = await Panne.findByPk(id);
+      //check if panne exist
+      if (!panne) {
+          return res.status(404).json({ error: 'panne not found' });
+      }
+      // assign panne new values
+      if(ActionCorrective) panne.ActionCorrective = ActionCorrective;
+      if(DescriptionAC) panne.DescriptionAC = DescriptionAC;
+      // save panne
+      await panne.save().then(async () => {
+        await Transaction.create({
+          UserID : panne.UserID , Action : action
+        }).catch((error) => console.log(error));
+      }).catch((error) => console.log(error));
+      // return updated panne
+      res.status(200).json({panne: panne});
+    }else{
+      res.status(400).json({message: 'Un des champs doivent être remplis'});
+    }
+  }catch (error) {
     console.error(error);
     res.status(500).send('Error updating panne');
   }
@@ -946,6 +1188,7 @@ module.exports = {
   GetByID,
   GetByUserID,
   GetByRefProduct,
+  GetByBon,
   Create,
   Update,
   Remove,
@@ -954,5 +1197,8 @@ module.exports = {
   UplaodIMG,
   upload,
   UpdateGarantie,
-  calculateAverageRepairTime
+  calculateAverageRepairTime,
+  UpdateNbrserie,
+  UpdateSuspendedStatus,
+  UpdateActionCorrective
 };

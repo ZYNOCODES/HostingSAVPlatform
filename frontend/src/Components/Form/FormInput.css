@@ -28,10 +28,79 @@ label{
     margin-left: 10px;
     text-align: left;
 }
+.form-group-type-panne{
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-start;
+}
+.forminput-type-panne{
+    display: flex;
+    flex-direction: column;
+}
 
+.forminput-type-panne input,select{
+    padding: 10px 50px;
+    margin-top: 5px;
+    border-top-right-radius: 10px;
+    border-top-left-radius: 10px;
+    border-bottom-left-radius: 0px;
+    border-bottom-right-radius: 0px;
+    border: 2px solid rgb(0, 0, 0);
+    text-align: center;
+    width: 70vh;
+    font-size: 1em;
+}
+
+.forminput-type-panne input:enabled,select:enabled{
+    border: 2px solid #c4c2c2;
+    transition: 0.5s;
+}
+
+.forminput-type-panne input:hover,select:hover{
+    border: 2px solid #000;
+    transition: 0.5s;
+}
+.Select-panne-input-containeer{
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: flex-start;
+    min-height: 96px;
+    height: auto;
+    width: 70vh;
+    background-color: #dadada;
+    border-bottom-left-radius: 10px;
+    border-bottom-right-radius: 10px;
+}
+.Select-panne-input{
+    flex: 1;
+    text-align: center;
+    font-size: 1em;
+    cursor: pointer;
+    padding: 10px 50px;
+    border-radius: 0px;
+    width: 100%;
+}
+.Select-panne-input-row{
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    height: auto;
+    border-radius: 0px;
+    border: 2px solid #c4c2c2;
+    background-color: #dadada;
+    padding-inline-end: 10px;
+}
+.Updatebutton{
+    display: flex;
+    justify-content: center;
+    width: 100%;
+    margin-top: 10px;
+}
 @media only screen and (max-width:1024px){
-    
-    
     .forminput input,select{
         padding: 7px 10px;
         margin-top: 5px;
@@ -39,14 +108,30 @@ label{
         text-align: left;
         width: 40vh;
         font-size: 0.8em;
-
         display: flex;
         flex-direction: column;
     }
-
     label{
         margin-bottom: 7px;
         margin-left: 7px;
         font-size: 0.8em;
+    }
+    .forminput-type-panne input,select{
+        padding: 7px 10px;
+        text-align: start;
+        width: 40vh;
+        font-size: 0.8em;
+        display: flex;
+        flex-direction: column;
+    }
+    .Select-panne-input{
+        padding: 7px 10px;
+        text-align: start;
+        font-size: 0.8em;
+    }
+    .Select-panne-input-containeer{
+        min-height: 96px;
+        height: auto;
+        width: 40vh;
     }
 }

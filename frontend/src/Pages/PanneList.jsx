@@ -12,6 +12,7 @@ import CostumSelectCentre from '../Components/Form/CostumSelectCentre';
 import ProgressionSelect from '../Components/Form/ProgressionSelect';
 import './Style/PanneList.css'
 import { CircularProgress } from '@mui/material';
+import moment from 'moment';
 
 export const PanneList = () => {
     const [add, setAdd] = useState(false);
@@ -45,7 +46,7 @@ export const PanneList = () => {
             UserID: user?.id,
           });
     
-          const response = await fetch(`http://localhost:8000/Pannes/?${queryParams}`, {
+          const response = await fetch(process.env.REACT_APP_URL_BASE+`/Pannes/?${queryParams}`, {
             method: "GET",
             headers: {
               "Content-Type": "application/json",
@@ -122,8 +123,8 @@ export const PanneList = () => {
                 <td className="table-patients-header-annee">Nom Complet</td>
                 <td className="table-patients-header-annee">Date</td>
                 <td className="table-patients-header-willaya">Centre</td>
-                <td className="table-patients-header-progress">Type de panne</td>
-                <td className="table-patients-header-progress">Statue de garantie</td>
+                <td className="table-patients-header-progress">Statut garantie</td>
+                <td className="table-patients-header-progress">Suspension</td>
                 <td className="table-patients-header-button">
                   <div className="pagination-buttons">
                     <button onClick={handlePrevPage} disabled={currentPage === 1}>
@@ -145,9 +146,10 @@ export const PanneList = () => {
                     item.Progres.toString().includes(search.toLowerCase())||
                     item.CentreDepot.toLowerCase().includes(search.toLowerCase())||
                     item.ReferanceProduit.toLowerCase().includes(search.toLowerCase())||
-                    item.TypePanne.toLowerCase().includes(search.toLowerCase())) &&
+                    item.TypePanne.toLowerCase().includes(search.toLowerCase())||
+                    formatDate(item.DateDepot).toLowerCase().includes(search.toLowerCase())) &&
                   (datedepot == null || item.DateDepot.includes(datedepot)) &&
-                  (progres === "All" || item.Progres.toString().includes(progres.toString())) &&
+                  (progres === "All" || item.Progres.toString().includes(progres.toString()) || item.Etat != null ) &&
                   (centredepot === "All" || item.CentreDepot.toLowerCase().includes(centredepot.toLowerCase()))
                 ) {
                   return item;
@@ -167,4 +169,21 @@ export const PanneList = () => {
     </div>
     </>
   )
+}
+function formatDate(dateString) {
+  const timeZone = 'Africa/Algiers'; // Algeria's time zone
+  const date = moment(dateString).tz(timeZone);
+  const monthNames = [
+    'Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin',
+    'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'
+  ];
+  const month = monthNames[date.month()];
+  const day = date.date();
+  const year = date.year();
+  const hours = date.hours();
+  const minutes = date.minutes();
+
+  const formattedDate = `${month} ${day}, ${year} at ${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+  return formattedDate;
+
 }

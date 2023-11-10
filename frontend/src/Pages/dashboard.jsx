@@ -16,7 +16,7 @@ function Dashboard() {
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
-        const response = await fetch(`http://localhost:8000/Dashboard/`, {
+        const response = await fetch(process.env.REACT_APP_URL_BASE+`/Dashboard/`, {
           method: "GET",
           headers: {
             "Content-Type": "application/json",

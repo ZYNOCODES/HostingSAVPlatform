@@ -28,6 +28,10 @@ const Panne = sequelize.define('pannes', {
     type: DataTypes.STRING,
     allowNull: false,
   },
+  NbrSerie: {
+    type: DataTypes.STRING,
+    allowNull: true,
+  },
   TypePanne: {
     type: DataTypes.STRING,
     allowNull: false,
@@ -58,6 +62,18 @@ const Panne = sequelize.define('pannes', {
     defaultValue: 0,
   },
   StatueGarantie:{
+    type: DataTypes.STRING,
+    allowNull: true,
+  },
+  ActionCorrective:{
+    type: DataTypes.STRING,
+    allowNull: true,
+  },
+  DescriptionAC:{
+    type: DataTypes.STRING,
+    allowNull: true,
+  },
+  Etat:{
     type: DataTypes.STRING,
     allowNull: true,
   },

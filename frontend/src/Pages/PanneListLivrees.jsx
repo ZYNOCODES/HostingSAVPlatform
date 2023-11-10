@@ -35,7 +35,7 @@ export const PanneListLivrees = () => {
             UserID: user?.id,
           });
     
-          const response = await fetch(`http://localhost:8000/Pannes/Delivred/?${queryParams}`, {
+          const response = await fetch(process.env.REACT_APP_URL_BASE+`/Pannes/Delivred/?${queryParams}`, {
             method: "GET",
             headers: {
               "Content-Type": "application/json",
@@ -95,7 +95,8 @@ export const PanneListLivrees = () => {
                 <td className="table-patients-header-annee">Nom Complet</td>
                 <td className="table-patients-header-annee">Date</td>
                 <td className="table-patients-header-willaya">Centre</td>
-                <td className="table-patients-header-progress">TypePanne</td>
+                <td className="table-patients-header-progress">Statut garantie</td>
+                <td className="table-patients-header-progress">Suspension</td>
                 <td className="table-patients-header-button"></td>
               </tr>
               {ProduitenPanne?.filter((item) => {

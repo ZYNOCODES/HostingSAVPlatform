@@ -56,7 +56,7 @@ const UpdateUser = () => {
   useEffect(() => {
     const fetchUserData = async () => {
       try {
-        const response = await fetch(`http://localhost:8000/User/${id}`, {
+        const response = await fetch(process.env.REACT_APP_URL_BASE+`/User/${id}`, {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
@@ -78,7 +78,7 @@ const UpdateUser = () => {
     fetchUserData();
   }, [id, user?.token]);
   const UpdateUser = async () =>{
-    const reponse = await fetch("http://localhost:8000/User", {
+    const reponse = await fetch(process.env.REACT_APP_URL_BASE+"/User", {
       method: "PATCH",
       headers: {
         "content-type": "application/json",

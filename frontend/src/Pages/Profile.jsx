@@ -21,7 +21,7 @@ const Profile = () =>{
     useEffect(() => {
         const fetchUserData = async () => {
         try {
-            const response = await fetch(`http://localhost:8000/User/${id}`, {
+            const response = await fetch(process.env.REACT_APP_URL_BASE+`/User/${id}`, {
             method: "GET",
             headers: {
                 "Content-Type": "application/json",
@@ -45,7 +45,7 @@ const Profile = () =>{
     useEffect(() => {
         const fetchAverageTime = async () => {
         try {
-            const response = await fetch(`http://localhost:8000/Pannes/Average/time/${UserData.id}`, {
+            const response = await fetch(process.env.REACT_APP_URL_BASE+`/Pannes/Average/time/${UserData.id}`, {
             method: "GET",
             headers: {
                 "Content-Type": "application/json",
@@ -68,7 +68,7 @@ const Profile = () =>{
     useEffect(() => {
         const fetchPanneByuser = async () => {
         try {
-            const response = await fetch(`http://localhost:8000/Pannes/byuser/${UserData.id}`, {
+            const response = await fetch(process.env.REACT_APP_URL_BASE+`/Pannes/byuser/${UserData.id}`, {
             method: "GET",
             headers: {
                 "Content-Type": "application/json",

@@ -26,18 +26,19 @@ function TablePanneRow ({Panne}){
       navigate(`/Details/${Panne.id}`)
     }
   }
-  const shouldHighlightRedRow = useMemo(() => calculateDaysDifference(new Date(Panne.DateDepot)) > 3 && Panne.Progres < 3, [Panne.DateDepot, Panne.Progres]);
-  const shouldHighlightOrangeRow = useMemo(() => calculateDaysDifference(new Date(Panne.DateDepot)) > 3 && Panne.Progres >= 3 && Panne.Progres < 5, [Panne.DateDepot, Panne.Progres]);
+  const shouldHighlightRedRow = useMemo(() => Panne?.Etat === null && calculateDaysDifference(new Date(Panne.DateDepot)) > 3 && Panne.Progres < 3, [Panne.DateDepot, Panne.Progres]);
+  const shouldHighlightOrangeRow = useMemo(() => Panne?.Etat === null && calculateDaysDifference(new Date(Panne.DateDepot)) > 3 && Panne.Progres >= 3 && Panne.Progres < 5, [Panne.DateDepot, Panne.Progres]);
+  const shouldHighlightYellowRow = useMemo(() => Panne?.Etat !== null, [Panne?.Etat]);
 
   return (
-    <tr className={`table-nouveau-ne-ligne${(shouldHighlightRedRow || shouldHighlightOrangeRow) ?
-      (shouldHighlightRedRow ? ('-red-row') : (shouldHighlightOrangeRow ? '-orange-row' : '')): ''}`} >
+    <tr className={`table-nouveau-ne-ligne${(shouldHighlightRedRow || shouldHighlightOrangeRow || shouldHighlightYellowRow) ?
+      (shouldHighlightRedRow ? ('-red-row') : (shouldHighlightOrangeRow ? '-orange-row' : '-yellow-row')): '-white-row'}`} >
       <td className="table-patients-td-nom">{Panne.id}</td>
       <td className="table-patients-td-nom">{Panne.Nom}{' '}{Panne.Prenom}</td>
       <td className="table-patients-td-annee">{formatDate(Panne.DateDepot)}</td>
       <td className="table-patients-td-willaya">{Panne.CentreDepot}</td>
-      <td className="table-patients-td-region">{Panne.TypePanne}</td>
-      <td className="table-patients-td-region">{Panne?.StatueGarantie}</td>
+      <td className="table-patients-td-region">{Panne.StatueGarantie}</td>
+      <td className="table-patients-td-region">{Panne?.Etat ? 'suspendu' : 'en cours'}</td>
       <td className="table-patients-td table-patient-td-button">
         <VoirButton Redirect={Redirect} red={shouldHighlightRedRow}/>
       </td>

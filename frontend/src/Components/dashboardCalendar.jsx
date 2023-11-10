@@ -17,7 +17,7 @@ export default function MyDashboradCalendar() {
   useEffect(() => {
     const fetchTop3Products = async () => {
       try {
-        const response = await fetch(`http://localhost:8000/Pannes/Product/Top3`, {
+        const response = await fetch(process.env.REACT_APP_URL_BASE+`/Pannes/Product/Top3`, {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
@@ -40,7 +40,7 @@ export default function MyDashboradCalendar() {
   useEffect(() => {
     const fetchTop3Pannes = async () => {
       try {
-        const response = await fetch(`http://localhost:8000/Pannes/Pannes/Top3`, {
+        const response = await fetch(process.env.REACT_APP_URL_BASE+`/Pannes/Pannes/Top3`, {
           method: "GET",
           headers: {
             "Content-Type": "application/json",

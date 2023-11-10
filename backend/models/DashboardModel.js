@@ -36,6 +36,10 @@ const statistic = sequelize.define('statistics', {
     type: DataTypes.BIGINT,
     allowNull: true,
   },
+  ProduitSuspendu:{
+    type: DataTypes.BIGINT,
+    allowNull: true,
+  },
   DelaiMoyenReparation: {
     type: DataTypes.TIME,
     allowNull: true,

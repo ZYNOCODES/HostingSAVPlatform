@@ -5,11 +5,12 @@ import { useAuthContext } from "../hooks/useAuthContext";
 
 export default function MyDashboradTop( {Data}) {
   const [AverageTime, setAverageTime] = useState();
+  const [Suspended, setSuspended] = useState();
   const { user } = useAuthContext();
   useEffect(() => {
     const fetchAverageTime = async () => {
       try {
-        const response = await fetch(`http://localhost:8000/Pannes/Average/time/${0}`, {
+        const response = await fetch(process.env.REACT_APP_URL_BASE+`/Pannes/Average/time/${0}`, {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
@@ -29,6 +30,30 @@ export default function MyDashboradTop( {Data}) {
     };
     fetchAverageTime();
   }, [user?.token]);
+  useEffect(() => {
+    const fetchSuspended = async () => {
+      try {
+        const response = await fetch(process.env.REACT_APP_URL_BASE+`/Dashboard/Suspended`, {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${user?.token}`,
+          },
+        });
+  
+        if (response.ok) {
+          const data = await response.json();
+          setSuspended(data.SuspendedSum);
+        } else {
+          console.error("Error receiving Panne data:", response.statusText);
+        }
+      } catch (error) {
+        console.error("Error fetching Panne data:", error);
+      }
+    };
+    fetchSuspended();
+  }, [user?.token]);
+  
   return (
     <div className="dashboard-top">
       <div className="dashboard-item">
@@ -55,11 +80,11 @@ export default function MyDashboradTop( {Data}) {
       </div>
       <div className="dashboard-item">
         <div className="dashboard-item-title">
-          <a>Produits reparés</a>
+          <a>Produits suspendu</a>
           <AiOutlineArrowUp fill="#008000" />
         </div>
         <div className="dashboard-nombre">
-          <h3>{Data?.ProduitRepares ? Data?.ProduitRepares : '0'}</h3>
+          <h3>{Suspended ? Suspended : '0'}</h3>
           <h3 className="dashboard-pourcentage-good">0%</h3>
         </div>
       </div>

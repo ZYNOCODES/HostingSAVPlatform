@@ -11,7 +11,7 @@ export default function MyNavBar({ act, setAct }) {
   useEffect(() => {
     const fetchUserData = async () => {
       try {
-        const response = await fetch(`http://localhost:8000/User/${user?.id}`, {
+        const response = await fetch(process.env.REACT_APP_URL_BASE+`/User/${user?.id}`, {
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${user?.token}`,

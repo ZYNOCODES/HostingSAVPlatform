@@ -30,7 +30,7 @@ const Users = () => {
       if(user?.Role === 'DRCentre'){
         const fetchUsersData = async () => {
           try {
-            const response = await fetch(`http://localhost:8000/User/byCentre/${user?.Centre}`, {
+            const response = await fetch(process.env.REACT_APP_URL_BASE+`/User/byCentre/${user?.Centre}`, {
               method: "GET",
               headers: {
                 "Content-Type": "application/json",
@@ -53,7 +53,7 @@ const Users = () => {
       }else{
         const fetchUsersData = async () => {
           try {
-            const response = await fetch(`http://localhost:8000/User`, {
+            const response = await fetch(process.env.REACT_APP_URL_BASE+`/User`, {
               method: "GET",
               headers: {
                 "Content-Type": "application/json",

@@ -11,13 +11,21 @@ const FormInput = (props) => {
   return (
     <div className='forminput'>
       <label>{props.label}</label>
-      <input 
+      {props.value ?
+        <input 
         placeholder={props.placeholder} 
         value={props.value} 
-        defaultValue={props.defaultValue}
         type={props.type} 
         onChange={handleChange} 
         readOnly={props.readOnly}/>
+      :
+        <input 
+        placeholder={props.placeholder} 
+        defaultValue={props.defaultValue} 
+        type={props.type} 
+        onChange={handleChange} 
+        readOnly={props.readOnly}/>
+        }
     </div>
   )
 }

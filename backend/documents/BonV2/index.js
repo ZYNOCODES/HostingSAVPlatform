@@ -1,6 +1,6 @@
 module.exports = ({ Nom, Prenom, Email, Telephone, 
    ReferanceProduit, TypePanne, Wilaya, 
-   CentreDepot, DateDepot, BonID }) => {
+   CentreDepot, DateDepot, BonID, NbrSerie }) => {
     const today = new Date();
 return `
       <!doctype html>
@@ -217,7 +217,7 @@ return `
                      </div>
                      <div class="informations">
                         <h3 class="title-left">
-                              Historique du produit
+                              Type de panne
                         </h3>
                         <div class="informations-result">
                               <h3 class="informations-result-text">${TypePanne}</h3>
@@ -227,7 +227,7 @@ return `
                         </div>
                         
                         <h3 class="title-right">
-                              الاصلاح السابق
+                           نوع عطل              
                         </h3>
                      </div>
                   </div>
@@ -245,7 +245,7 @@ return `
                                  <td>1</td>
                                  <td>${TypePanne}</td>
                                  <td>${ReferanceProduit}</td>
-                                 <td>${ReferanceProduit}</td>
+                                 <td>${NbrSerie}</td>
                                  <td></td>
                               </tr>
                         </tbody>

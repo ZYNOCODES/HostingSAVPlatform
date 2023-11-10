@@ -10,7 +10,6 @@ const router = express.Router();
 
 router.get('/fetchPDF', PDFSender);
 router.post('/createPDF/:BonDepot', PDFGenerator);
-router.use(requireAuth);
 router.get('/downloaderPDF/:filename', PDFDownloader);
 
 module.exports = router;

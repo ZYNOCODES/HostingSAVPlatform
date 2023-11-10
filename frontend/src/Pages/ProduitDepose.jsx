@@ -30,7 +30,7 @@ const ProduitDepose = () => {
     const [loading, setLoading] = useState(false); // State for CircularProgress
     const [open,setOpen] = React.useState(false);
     const [CodePostal, setCodePostal] = useState('0');
-
+    const [NbrSerie, setNbrSerie] = useState('');
     const handleClickOpen = () => {
         setOpen(true);
     };
@@ -43,7 +43,7 @@ const ProduitDepose = () => {
     useEffect(() => {
         const fetchPanneData = async () => {
         try {
-            const response = await fetch(`http://localhost:8000/Pannes/${id}`, {
+            const response = await fetch(process.env.REACT_APP_URL_BASE+`/Pannes/${id}`, {
             method: "GET",
             headers: {
                 "Content-Type": "application/json",
@@ -70,7 +70,7 @@ const ProduitDepose = () => {
     useEffect(() => {
         const fetchCodePostalData = async () => {
           try {
-            const response = await fetch(`http://localhost:8000/Willaya/${PanneData?.Wilaya}`, {
+            const response = await fetch(process.env.REACT_APP_URL_BASE+`/Willaya/${PanneData?.Wilaya}`, {
               method: "GET",
               headers: {
                 "Content-Type": "application/json",
@@ -95,7 +95,7 @@ const ProduitDepose = () => {
         setLoading(true); // Show CircularProgress
         try {
             if(PanneData?.BDPDFfile === null || PanneData?.BDPDFfile === undefined){
-                const response = await fetch('http://localhost:8000/EmailGenerator/createPDF/BonV3', {
+                const response = await fetch(process.env.REACT_APP_URL_BASE+'/EmailGenerator/createPDF/BonV3', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -109,20 +109,23 @@ const ProduitDepose = () => {
                         TypePanne: PanneData.TypePanne,
                         Wilaya: PanneData.Wilaya,
                         CentreDepot: PanneData.CentreDepot,
+                        NbrSerie: NbrSerie,
                         DateDepot: new Date().toISOString().slice(0, 10),
                         type: 'BD',  
                         postalCode: CodePostal
                     })
                     });
-            
+                    const data = await response.json();
                     if (!response.ok) {
-                        throw new Error('Network response was not ok');
+                      setLoading(false);
+                      handleClose();
+                      notifyFailed(data.message);
                     }
             
                     if(response.ok){
-                        const uniqueFilename = await response.text();
+                        const uniqueFilename = data.uniqueFilename;
             
-                        const pdfResponse = await fetch(`http://localhost:8000/EmailGenerator/fetchPDF?filename=${uniqueFilename}`, {
+                        const pdfResponse = await fetch(process.env.REACT_APP_URL_BASE+`/EmailGenerator/fetchPDF?filename=${uniqueFilename}`, {
                             method: 'GET',
                             headers: {
                                 'Content-Type': 'application/pdf',
@@ -130,7 +133,8 @@ const ProduitDepose = () => {
                         });
                 
                         if (!pdfResponse.ok) {
-                            throw new Error('Network response was not ok');
+                          setLoading(false);
+                          handleClose();
                         }
                 
                         if(pdfResponse.ok){
@@ -150,7 +154,7 @@ const ProduitDepose = () => {
         }
     }
     const UpdatePanne = async (PDFFilename) =>{
-        const reponse = await fetch(`http://localhost:8000/Pannes/${id}`, {
+        const reponse = await fetch(process.env.REACT_APP_URL_BASE+`/Pannes/${id}`, {
           method: "PATCH",
           headers: {
             "content-type": "application/json",
@@ -158,7 +162,7 @@ const ProduitDepose = () => {
           },
           body: JSON.stringify({ 
             progres : 1, userID: user?.id, action: `deposer la panne ID= ${id}`,
-            PDFFilename
+            PDFFilename, NbrSerie: NbrSerie
           }),
         });
     
@@ -166,77 +170,79 @@ const ProduitDepose = () => {
     
         if (!reponse.ok) {
             notifyFailed(json.message);
+            setLoading(false); // Hide CircularProgress
+            handleClose();
         }
         if (reponse.ok) {
             setLoading(false); // Hide CircularProgress
             handleClose();
             notifySuccess(json.message);
-            setTimeout(() => {
-                navigate(`/DetailPanneSav/${id}`)
-            }, 2000)
+            navigate(`/DetailPanneSav/${id}`);
         }
+    }
+    const handleNbrSerieInputChange = (value) => {
+        setNbrSerie(value);
     }
     return (
     <>
-        <MyNavBar  act={act} setAct={setAct} />
-        <div className='pannedetails-container'>
-            <div className='pannedetails-title'>
-                <div className='back-button' onClick={GoBackPressed}>
-                    <IoIosArrowBack className='icon' size={33} fill='#fff'/>
-                </div>
-                <h3>Details de panne</h3>
-            </div>
-            <div className='pannedetails-info form-section'>
-                <form>
-                    <FormInput label='Nom :' value={PanneData?.Nom} readOnly type='text'/>
-                    <FormInput label='Prenom :' value={PanneData?.Prenom} readOnly type='text' />
-                    <FormInput label='Email' value={PanneData?.Email} readOnly type='text' />
-                    <FormInput label='Num Tel:' value={PanneData?.Telephone} readOnly type='text' />
-                    <FormInput label='Wilaya:' value={PanneData?.Wilaya} readOnly type='text' />
-                </form>
-                <form>
-                    <FormInput label='Referance de produit :' value={PanneData?.ReferanceProduit} readOnly type='text'/>
-                    <FormInput label='Type de panne :' value={PanneData?.TypePanne} readOnly type='text' />
-                    <FormInput label='Centre de depot:' value={"SAV de "+PanneData?.CentreDepot} readOnly type='text' />
-                    <FormInput label='Date de depot:' value={formatDate(PanneData?.DateDepot)} readOnly type='text' />
-                    <FormInput label='Description:' value={PanneData?.Description} readOnly type='text' />
-                </form>
-            </div>
+      <MyNavBar  act={act} setAct={setAct} />
+      <div className='pannedetails-container'>
+          <div className='pannedetails-title'>
+              <div className='back-button' onClick={GoBackPressed}>
+                  <IoIosArrowBack className='icon' size={33} fill='#fff'/>
+              </div>
+              <h3>Details de panne</h3>
+          </div>
+          <div className='pannedetails-info form-section'>
+              <form>
+                  <FormInput label='Nom :' value={PanneData?.Nom} readOnly type='text'/>
+                  <FormInput label='Prenom :' value={PanneData?.Prenom} readOnly type='text' />
+                  <FormInput label='Email' value={PanneData?.Email} readOnly type='text' />
+                  <FormInput label='Num Tel:' value={PanneData?.Telephone} readOnly type='text' />
+                  <FormInput label='Wilaya:' value={PanneData?.Wilaya} readOnly type='text' />
+              </form>
+              <form>
+                  <FormInput label='N° de serie :' placeholder= 'Entrer le numero de serie de ce produit' type='text' defaultValue = {PanneData?.NbrSerie} onChange={handleNbrSerieInputChange}/>
+                  <FormInput label='Referance de produit :' value={PanneData?.ReferanceProduit} readOnly type='text'/>
+                  <FormInput label='Type de panne :' value={PanneData?.TypePanne} readOnly type='text' />
+                  <FormInput label='Centre de depot:' value={"SAV de "+PanneData?.CentreDepot} readOnly type='text' />
+                  <FormInput label='Date de depot:' value={formatDate(PanneData?.DateDepot)} readOnly type='text' />
+              </form>
+          </div>
 
-            <div className='pannedetails-Button1'>
-                <button className='Cancel-btn' type='button' onClick={GoBackPressed}>Annuler</button>
-                <button className='depose-btn' type='submit' onClick={handleClickOpen}>Deposer</button>
-            </div>
-            <ToastContainer />
-        </div>
-
-        <div>
-          <Dialog
-            open={open}
-            onClose={false}
-            aria-labelledby="alert-dialog-title"
-            aria-describedby="alert-dialog-description"
-          >
-            <DialogTitle id="alert-dialog-title">
-              {"Confirmez-vous le dépôt de ce produit ? "}
-            </DialogTitle>
-            <DialogContent>
-              <DialogContentText id="alert-dialog-description">
-                Cette action permet de passe de l'etat en attente de depot a l'etat en attente de reparation.
-              </DialogContentText>
-            </DialogContent>
-            <DialogActions>
-              <Button onClick={handleClose} disabled={loading}>Annuller</Button>
-              <Button onClick={createAndDownloadPdf} autoFocus disabled={loading}>
-                Confirmer
-              </Button>
-            </DialogActions>
-            {loading && (
-            <div className="CircularProgress-container">
-              <CircularProgress className="CircularProgress" />
-            </div>
-            )}
-          </Dialog>
+          <div className='pannedetails-Button1'>
+              <button className='Cancel-btn' type='button' onClick={GoBackPressed}>Annuler</button>
+              <button className='depose-btn' type='submit' onClick={handleClickOpen}>Deposer</button>
+          </div>
+          <ToastContainer />
+      </div>
+      <div>
+        <Dialog
+          open={open}
+          onClose={false}
+          aria-labelledby="alert-dialog-title"
+          aria-describedby="alert-dialog-description"
+        >
+          <DialogTitle id="alert-dialog-title">
+            {"Confirmez-vous le dépôt de ce produit ? "}
+          </DialogTitle>
+          <DialogContent>
+            <DialogContentText id="alert-dialog-description">
+              Cette action permet de passe de l'etat en attente de depot a l'etat en attente de reparation.
+            </DialogContentText>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={handleClose} disabled={loading}>Annuller</Button>
+            <Button onClick={createAndDownloadPdf} autoFocus disabled={loading}>
+              Confirmer
+            </Button>
+          </DialogActions>
+          {loading && (
+          <div className="CircularProgress-container">
+            <CircularProgress className="CircularProgress" />
+          </div>
+          )}
+        </Dialog>
       </div>
     </>
   )
