@@ -106,7 +106,7 @@ const OuvrirUnTicket = () => {
                     Wilaya,
                     CentreDepot,
                     DateDepot,
-                    type: 'TBD',  
+                    type: 'BD',  
                     postalCode: PostalCode
                 })
                 });
