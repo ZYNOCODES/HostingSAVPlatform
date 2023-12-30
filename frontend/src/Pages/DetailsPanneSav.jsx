@@ -43,6 +43,7 @@ const DetailsPanneSav = () => {
   const { id } = useParams();
   const { user } = useAuthContext();
   const [image, setSelectedImage] = useState(null);
+  const [imageUploaded, setImageUploaded] = useState(false);
   const [ToggleValue, setToggleValue] = useState(0);
   const [disabledButtons, setDisabledButtons] = useState([
     false,
@@ -82,27 +83,33 @@ const DetailsPanneSav = () => {
   //Upload image to server
   const uploadImage = async (e) => {
     e.preventDefault();
+    if(image === null || image === undefined ){
+      notifyFailed("Veuillez choisir une image");
+    }else{
+      const formData = new FormData();
+      formData.append("image", image);
+      formData.append("id", id);
+      formData.append("userID", user?.id);
 
-    const formData = new FormData();
-    formData.append("image", image);
-    formData.append("id", id);
-    formData.append("userID", user?.id);
-
-    const result = await axios.post(
-      process.env.REACT_APP_URL_BASE+"/Pannes/IMG",
-      formData,
-      {
-        headers: { 
-          "Content-Type": "multipart/form-data",       
-          Authorization: `Bearer ${user?.token}`,
-        },
+      const result = await axios.post(
+        process.env.REACT_APP_URL_BASE+"/Pannes/IMG",
+        formData,
+        {
+          headers: { 
+            "Content-Type": "multipart/form-data",       
+            Authorization: `Bearer ${user?.token}`,
+          },
+        }
+      );
+      if (result.status === 200) {
+        notifySuccess("Image a été téléchargée avec succès.");
+        setSelectedImage(null);
+      } else {
+        notifyFailed("Erreur lors du téléchargement de l'image.");
+        setSelectedImage(null);
       }
-    );
-    if (result.status === 200) {
-      notifySuccess("Image a été téléchargée avec succès.");
-    } else {
-      notifyFailed("Erreur lors du téléchargement de l'image.");
     }
+    
   };
   //Get panne data from server
   const fetchPanneData = async () => {
@@ -130,7 +137,7 @@ const DetailsPanneSav = () => {
   };
   useEffect(() => {
     fetchPanneData();
-  },[user?.token]);
+  },[user.token, id, image]);
   //Get all pannes data of a product from server
   useEffect(() => {
     const fetchAllPannesDataOfProduct = async () => {
@@ -158,7 +165,7 @@ const DetailsPanneSav = () => {
     };
 
     fetchAllPannesDataOfProduct();
-  }, [PanneData?.ReferanceProduit, id, user?.token]);
+  }, [PanneData?.ReferanceProduit, id, user?.token, image]);
   useEffect(() => {
     const fetchCodePostalData = async () => {
       try {
@@ -666,7 +673,6 @@ const DetailsPanneSav = () => {
   useEffect(() => {
     (PanneData?.Etat === null || PanneData?.Etat === '') ? setsuspended(false) : setsuspended(true);
   },[PanneData?.Etat, suspended]);
-  
   return (
     <>
       <MyNavBar act={act} setAct={setAct} />
@@ -906,20 +912,18 @@ const DetailsPanneSav = () => {
             </div>
 
             <div className="image">
-              {image ? (
+              {(PanneData?.image !== null || image !== null)  ? (
                 <img
-                  onClick={uploadImage}
-                  src={URL.createObjectURL(image)}
-                  alt="Selected"
+                  src={PanneData?.image === null ? URL.createObjectURL(image) : `/images/${PanneData?.image}` }
+                  alt="product img"
                   style={{ maxWidth: "350px", width: "100%", height: "310px" }}
                 />
               ) : (
-                <img
-                  src={imageframe}
-                  style={{maxWidth: "350px",width: "100%",height: "250px",marginTop: "30px",}}
-                />
+                <img src={imageframe} alt="" style={{maxWidth: "350px",width: "100%",height: "250px",marginTop: "30px",}} />
               )}
             </div>
+            <input type="button" value="Envoyer" onClick={uploadImage} className="file-send-btn" />
+
           </div>
         </div>
         <div className="Historique-container">

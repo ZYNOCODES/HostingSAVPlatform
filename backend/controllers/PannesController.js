@@ -665,7 +665,7 @@ const UplaodIMG = async (req, res) => {
 }
 const storage = multer.diskStorage({
   destination: function(req, file, cb) {
-      cb(null, path.join(__dirname, '..', '..', 'frontend', 'src', 'Pages', 'Style', 'images'));
+    cb(null, path.join(__dirname, '..', 'images'));
   },
   filename: function(req, file, cb) {
       cb(null, Date.now() + path.extname(file.originalname));
