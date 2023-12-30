@@ -94,61 +94,57 @@ const ProduitDepose = () => {
     const createAndDownloadPdf = async () => {
         setLoading(true); // Show CircularProgress
         try {
-            if(PanneData?.BDPDFfile === null || PanneData?.BDPDFfile === undefined){
-                const response = await fetch(process.env.REACT_APP_URL_BASE+'/EmailGenerator/createPDF/BonV3', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        Nom: PanneData.Nom,
-                        Prenom: PanneData.Prenom,
-                        Email: PanneData.Email,
-                        Telephone: PanneData.Telephone,
-                        ReferanceProduit: PanneData.ReferanceProduit,
-                        TypePanne: PanneData.TypePanne,
-                        Wilaya: PanneData.Wilaya,
-                        CentreDepot: PanneData.CentreDepot,
-                        NbrSerie: NbrSerie,
-                        DateDepot: new Date().toISOString().slice(0, 10),
-                        type: 'BD',  
-                        postalCode: CodePostal
-                    })
-                    });
-                    const data = await response.json();
-                    if (!response.ok) {
-                      setLoading(false);
-                      handleClose();
-                      notifyFailed(data.message);
-                    }
-            
-                    if(response.ok){
-                        const uniqueFilename = data.uniqueFilename;
-            
-                        const pdfResponse = await fetch(process.env.REACT_APP_URL_BASE+`/EmailGenerator/fetchPDF?filename=${uniqueFilename}`, {
-                            method: 'GET',
-                            headers: {
-                                'Content-Type': 'application/pdf',
-                            },
-                        });
-                
-                        if (!pdfResponse.ok) {
-                          setLoading(false);
-                          handleClose();
-                        }
-                
-                        if(pdfResponse.ok){
-                            const pdfBlob = await pdfResponse.blob();
-                            const link = document.createElement('a');
-                            link.href = URL.createObjectURL(pdfBlob);
-                            link.download = uniqueFilename;
-                            link.click();
-                            UpdatePanne(uniqueFilename);
-                        }
-                    }
-            }else{
-              UpdatePanne();
-            }
+              const response = await fetch(process.env.REACT_APP_URL_BASE+'/EmailGenerator/createPDF/BonV3', {
+                  method: 'POST',
+                  headers: {
+                      'Content-Type': 'application/json',
+                  },
+                  body: JSON.stringify({
+                      Nom: PanneData.Nom,
+                      Prenom: PanneData.Prenom,
+                      Email: PanneData.Email,
+                      Telephone: PanneData.Telephone,
+                      ReferanceProduit: PanneData.ReferanceProduit,
+                      TypePanne: PanneData.TypePanne,
+                      Wilaya: PanneData.Wilaya,
+                      CentreDepot: PanneData.CentreDepot,
+                      NbrSerie: NbrSerie,
+                      DateDepot: new Date().toISOString().slice(0, 10),
+                      type: 'BD',  
+                      postalCode: CodePostal
+                  })
+                  });
+                  const data = await response.json();
+                  if (!response.ok) {
+                    setLoading(false);
+                    handleClose();
+                    notifyFailed(data.message);
+                  }
+          
+                  if(response.ok){
+                      const uniqueFilename = data.uniqueFilename;
+          
+                      const pdfResponse = await fetch(process.env.REACT_APP_URL_BASE+`/EmailGenerator/fetchPDF?filename=${uniqueFilename}`, {
+                          method: 'GET',
+                          headers: {
+                              'Content-Type': 'application/pdf',
+                          },
+                      });
+              
+                      if (!pdfResponse.ok) {
+                        setLoading(false);
+                        handleClose();
+                      }
+              
+                      if(pdfResponse.ok){
+                          const pdfBlob = await pdfResponse.blob();
+                          const link = document.createElement('a');
+                          link.href = URL.createObjectURL(pdfBlob);
+                          link.download = uniqueFilename;
+                          link.click();
+                          UpdatePanne(uniqueFilename);
+                      }
+                  }
         } catch (error) {
             console.error('Fetch error:', error);
         }

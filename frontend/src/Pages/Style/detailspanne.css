@@ -1,3 +1,18 @@
+.file-send-btn{
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 20px;
+  background-color: #d4171b;
+  font-size: large;
+  color: #fff;
+  font-weight: 500;
+  letter-spacing: 1px;
+  padding: 8px;
+  border-radius: 10px;
+  cursor: pointer;
+}
 .pannedetails-suspended-container h3 {
   font-size: 20px;
   color: #fff;
@@ -289,6 +304,7 @@
   height: fit-content;
   justify-content: center;
   align-items: center;
+  margin-top: 20px;
 }
 .inputButton {
   padding: 5px 15px;
